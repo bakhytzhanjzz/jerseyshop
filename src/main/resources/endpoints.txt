@@ -1,0 +1,50 @@
+Authentication Endpoints
+
+Method	URL	Authentication	Description
+POST	/api/auth/login	None	Authenticate user and generate JWT token.
+POST	/api/users/register	None	Register a new user and create a cart for them.
+Product Endpoints
+| Method | URL | Authentication | Description |
+|-------------------|-------------------|---------------|
+| GET       | /api/products                    | None          | Retrieve all products. |
+| GET       | /api/products/{id}                | None          | Retrieve a product by ID. |
+| GET       | /api/products/category/{categoryId} | None          | Retrieve products by category. |
+| GET       | /api/products/team/{team}        | None          | Retrieve products by team (e.g., Arsenal). |
+| GET       | /api/products/color/{color}      | None          | Retrieve products by color. |
+| GET       | /api/products/size/{size}        | None          | Retrieve products by size. |
+| GET       | /api/products/search?keyword={keyword} | None     | Search products by keyword in name or description. |
+| POST      | /api/products                    | ADMIN         | Create a new product. |
+| PUT       | /api/products/{id}               | ADMIN         | Update a product by ID. |
+| DELETE    | /api/products/{id}               | ADMIN         | Delete a product by ID. |
+
+Category Endpoints
+
+Method	URL	Authentication	Description
+GET	/api/categories	None	Retrieve all categories.
+GET	/api/categories/{id}	None	Retrieve a category by ID.
+POST	/api/categories	ADMIN	Create a new category.
+PUT	/api/categories/{id}	ADMIN	Update a category by ID.
+DELETE	/api/categories/{id}	ADMIN	Delete a category by ID (if no products are associated).
+User Endpoints
+
+Method	URL	Authentication	Description
+GET	/api/users	ADMIN	Retrieve all users (admin only).
+GET	/api/users/{id}	ADMIN	Retrieve a user by ID (admin only).
+PUT	/api/users/{id}	ADMIN	Update a user by ID (admin only).
+DELETE	/api/users/{id}	ADMIN	Delete a user by ID (admin only).
+Order Endpoints
+
+Method	URL	Authentication	Description
+GET	/api/orders	CUSTOMER	Retrieve all orders (customer sees own orders).
+GET	/api/orders/{id}	CUSTOMER	Retrieve an order by ID (customer sees own order).
+GET	/api/orders/user/{userId}	CUSTOMER	Retrieve orders by user ID (customer sees own orders).
+POST	/api/orders/user/{userId}	CUSTOMER	Create an order from a user’s cart.
+PUT	/api/orders/{id}/status	CUSTOMER	Update an order’s status (e.g., SHIPPED).
+Cart Endpoints
+
+Method	URL	Authentication	Description
+GET	/api/cart/user/{userId}	CUSTOMER	Retrieve a user’s cart.
+POST	/api/cart/user/{userId}/add	CUSTOMER	Add an item to a user’s cart (productId, quantity as query params).
+PUT	/api/cart/user/{userId}/update	CUSTOMER	Update item quantity in a user’s cart (productId, quantity as query params).
+DELETE	/api/cart/user/{userId}/remove	CUSTOMER	Remove an item from a user’s cart (productId as query param).
+DELETE	/api/cart/user/{userId}/clear	CUSTOMER	Clear a user’s cart.

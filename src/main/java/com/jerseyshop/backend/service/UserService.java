@@ -9,6 +9,9 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
@@ -27,6 +30,12 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
 
     @Transactional
     public List<User> getAllUsers() {
@@ -77,7 +86,6 @@ public class UserService {
         cart.setUser(savedUser);
         cartRepository.save(cart);
         logger.info("Cart created for user ID: {}", savedUser.getId());
-
         return savedUser;
     }
 
@@ -89,6 +97,7 @@ public class UserService {
         validateUser(userDetails);
         if (!user.getEmail().equals(userDetails.getEmail()) &&
                 userRepository.existsByEmail(userDetails.getEmail())) {
+            logger.error("Email already exists: {}", userDetails.getEmail());
             throw new IllegalArgumentException("Email already exists");
         }
         user.setFirstName(userDetails.getFirstName());
@@ -102,7 +111,9 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
+        logger.info("Deleting user ID: {}", id);
         if (!userRepository.existsById(id)) {
+            logger.error("User not found: {}", id);
             throw new IllegalArgumentException("User not found");
         }
         userRepository.deleteById(id);
