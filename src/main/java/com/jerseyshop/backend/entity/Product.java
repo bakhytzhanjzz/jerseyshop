@@ -1,5 +1,6 @@
 package com.jerseyshop.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -35,8 +36,16 @@ public class Product {
     private String color;
 
     @Column(nullable = false)
-    private String size; // e.g., S, M, L, XL
+    private String size;
 
     @Column(nullable = true)
-    private String imageUrl; // URL to jersey image
+    private String imageUrl;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "product")
+    private java.util.List<OrderItem> orderItems;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "product")
+    private java.util.List<CartItem> cartItems;
 }

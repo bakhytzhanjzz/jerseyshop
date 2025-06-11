@@ -1,5 +1,6 @@
 package com.jerseyshop.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -27,8 +28,9 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Column(nullable = false)
-    private String status; // e.g., PENDING, SHIPPED, DELIVERED, CANCELLED
+    private String status;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems = new ArrayList<>();
 }
