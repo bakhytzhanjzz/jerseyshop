@@ -7,6 +7,7 @@ import com.jerseyshop.backend.repository.CartItemRepository;
 import com.jerseyshop.backend.repository.CartRepository;
 import com.jerseyshop.backend.repository.ProductRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +25,11 @@ public class CartService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Transactional
     public Optional<Cart> getCartByUserId(Long userId) {
-        return cartRepository.findByUserId(userId);
+        Optional<Cart> cart = cartRepository.findByUserId(userId);
+        cart.ifPresent(c -> Hibernate.initialize(c.getCartItems()));
+        return cart;
     }
 
     @Transactional

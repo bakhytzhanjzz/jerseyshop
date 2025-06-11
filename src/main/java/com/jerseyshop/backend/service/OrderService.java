@@ -3,6 +3,7 @@ package com.jerseyshop.backend.service;
 import com.jerseyshop.backend.entity.*;
 import com.jerseyshop.backend.repository.*;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +29,25 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Transactional
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();
+        orders.forEach(order -> Hibernate.initialize(order.getUser()));
+        return orders;
     }
 
+    @Transactional
     public Optional<Order> getOrderById(Long id) {
-        return orderRepository.findById(id);
+        Optional<Order> order = orderRepository.findById(id);
+        order.ifPresent(o -> Hibernate.initialize(o.getUser()));
+        return order;
     }
 
+    @Transactional
     public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+        List<Order> orders = orderRepository.findByUserId(userId);
+        orders.forEach(order -> Hibernate.initialize(order.getUser()));
+        return orders;
     }
 
     public List<Order> getOrdersByStatus(String status) {

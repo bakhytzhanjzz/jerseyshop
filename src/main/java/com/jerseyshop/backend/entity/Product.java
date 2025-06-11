@@ -1,13 +1,15 @@
 package com.jerseyshop.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +29,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnoreProperties({"products"})
     private Category category;
 
     @Column(nullable = false)
@@ -41,11 +44,11 @@ public class Product {
     @Column(nullable = true)
     private String imageUrl;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "product")
-    private java.util.List<OrderItem> orderItems;
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"order", "product"})
+    private List<OrderItem> orderItems;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "product")
-    private java.util.List<CartItem> cartItems;
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"cart", "product"})
+    private List<CartItem> cartItems;
 }

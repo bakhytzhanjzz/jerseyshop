@@ -5,6 +5,9 @@ import com.jerseyshop.backend.entity.User;
 import com.jerseyshop.backend.repository.CartRepository;
 import com.jerseyshop.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,8 @@ import java.util.Optional;
 
 @Service
 public class UserService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     private UserRepository userRepository;
 
@@ -23,12 +28,24 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Transactional
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> users = userRepository.findAll();
+        users.forEach(user -> {
+            Hibernate.initialize(user.getOrders());
+            Hibernate.initialize(user.getCart());
+        });
+        return users;
     }
 
+    @Transactional
     public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+        Optional<User> user = userRepository.findById(id);
+        user.ifPresent(u -> {
+            Hibernate.initialize(u.getOrders());
+            Hibernate.initialize(u.getCart());
+        });
+        return user;
     }
 
     public Optional<User> getUserByUsername(String username) {
@@ -41,27 +58,32 @@ public class UserService {
 
     @Transactional
     public User createUser(User user) {
+        logger.info("Creating user: {}", user.getUsername());
         validateUser(user);
         if (userRepository.existsByUsername(user.getUsername())) {
+            logger.error("Username already exists: {}", user.getUsername());
             throw new IllegalArgumentException("Username already exists");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
+            logger.error("Email already exists: {}", user.getEmail());
             throw new IllegalArgumentException("Email already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("CUSTOMER"); // Default role
+        user.setRole("CUSTOMER");
         User savedUser = userRepository.save(user);
+        logger.info("User saved with ID: {}", savedUser.getId());
 
-        // Create a cart for the new user
         Cart cart = new Cart();
         cart.setUser(savedUser);
         cartRepository.save(cart);
+        logger.info("Cart created for user ID: {}", savedUser.getId());
 
         return savedUser;
     }
 
     @Transactional
     public User updateUser(Long id, User userDetails) {
+        logger.info("Updating user ID: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         validateUser(userDetails);

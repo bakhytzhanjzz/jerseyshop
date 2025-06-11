@@ -5,6 +5,7 @@ import com.jerseyshop.backend.entity.Product;
 import com.jerseyshop.backend.repository.CategoryRepository;
 import com.jerseyshop.backend.repository.ProductRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +20,25 @@ public class ProductService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Transactional
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        products.forEach(product -> Hibernate.initialize(product.getCategory()));
+        return products;
     }
 
+    @Transactional
     public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+        Optional<Product> product = productRepository.findById(id);
+        product.ifPresent(p -> Hibernate.initialize(p.getCategory()));
+        return product;
     }
 
+    @Transactional
     public List<Product> getProductsByCategory(Long categoryId) {
-        return productRepository.findByCategoryId(categoryId);
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        products.forEach(product -> Hibernate.initialize(product.getCategory()));
+        return products;
     }
 
     public List<Product> getProductsByTeam(String team) {

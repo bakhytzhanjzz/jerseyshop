@@ -1,6 +1,6 @@
 package com.jerseyshop.backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,6 +12,7 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @Data
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,6 +20,7 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"orders", "cart"})
     private User user;
 
     @Column(nullable = false)
@@ -30,7 +32,7 @@ public class Order {
     @Column(nullable = false)
     private String status;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"order"})
     private List<OrderItem> orderItems = new ArrayList<>();
 }
