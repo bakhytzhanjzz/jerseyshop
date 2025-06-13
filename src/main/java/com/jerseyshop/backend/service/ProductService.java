@@ -1,5 +1,6 @@
 package com.jerseyshop.backend.service;
 
+import com.cloudinary.Cloudinary;
 import com.jerseyshop.backend.entity.Category;
 import com.jerseyshop.backend.entity.Product;
 import com.jerseyshop.backend.repository.CategoryRepository;
@@ -8,8 +9,11 @@ import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -19,6 +23,9 @@ public class ProductService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     @Transactional
     public List<Product> getAllProducts() {
@@ -58,16 +65,26 @@ public class ProductService {
     }
 
     @Transactional
-    public Product createProduct(Product product) {
+    public Product createProduct(Product product, MultipartFile image) {
         validateProduct(product);
         Category category = categoryRepository.findById(product.getCategory().getId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
         product.setCategory(category);
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(), Map.of());
+                product.setImageUrl((String) uploadResult.get("url"));
+            } catch (IOException e) {
+                throw new RuntimeException("Image upload failed: " + e.getMessage());
+            }
+        }
+
         return productRepository.save(product);
     }
 
     @Transactional
-    public Product updateProduct(Long id, Product productDetails) {
+    public Product updateProduct(Long id, Product productDetails, MultipartFile image) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
         validateProduct(productDetails);
@@ -82,7 +99,18 @@ public class ProductService {
         product.setTeam(productDetails.getTeam());
         product.setColor(productDetails.getColor());
         product.setSize(productDetails.getSize());
-        product.setImageUrl(productDetails.getImageUrl());
+
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(), Map.of());
+                product.setImageUrl((String) uploadResult.get("url"));
+            } catch (IOException e) {
+                throw new RuntimeException("Image upload failed: " + e.getMessage());
+            }
+        } else {
+            product.setImageUrl(productDetails.getImageUrl());
+        }
+
         return productRepository.save(product);
     }
 
@@ -116,5 +144,13 @@ public class ProductService {
         if (product.getSize() == null || product.getSize().isBlank()) {
             throw new IllegalArgumentException("Size is required");
         }
+    }
+
+    @Transactional
+    public Product updateProductImage(Long id, String imageUrl) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        product.setImageUrl(imageUrl); // Adjust to setImageUrls if List<String>
+        return productRepository.save(product);
     }
 }
