@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: 12jerseyshop
+    env: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: jdbc:postgresql://postgres:7b_8$VTZ2._&pGK@db.panrjfrguyhsjrwiuqoc.supabase.co:5432/postgres
+        fromDatabase:
+          name: 12jerseyshop
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        value: 7b_8$VTZ2._&pGK
