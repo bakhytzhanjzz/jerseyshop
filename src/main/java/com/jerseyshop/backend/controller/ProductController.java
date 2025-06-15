@@ -59,28 +59,46 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> createProduct(
+    public ResponseEntity<?> createProduct(
             @RequestPart("product") Product product,
             @RequestPart(value = "image", required = false) MultipartFile image) {
-        Product createdProduct = productService.createProduct(product, image);
-        return ResponseEntity.ok(createdProduct);
+        try {
+            Product createdProduct = productService.createProduct(product, image);
+            return ResponseEntity.ok(createdProduct);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create product: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<?> updateProduct(
             @PathVariable Long id,
-            @RequestPart("product") Product productDetails,
-            @RequestPart(value = "image", required = false) MultipartFile image) {
-        Product updatedProduct = productService.updateProduct(id, productDetails, image);
-        return ResponseEntity.ok(updatedProduct);
+            @RequestPart(value = "product", required = false) Product productDetails,
+            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestBody(required = false) Product jsonProduct) {
+        try {
+            if (jsonProduct != null) {
+                Product updatedProduct = productService.updateProduct(id, jsonProduct, null);
+                return ResponseEntity.ok(updatedProduct);
+            } else {
+                Product updatedProduct = productService.updateProduct(id, productDetails, image);
+                return ResponseEntity.ok(updatedProduct);
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update product: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/image")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateProductImage(@PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
-            String imageUrl = request.get("imageUrl"); // Adjust based on Product field name
+            String imageUrl = request.get("imageUrl");
             if (imageUrl == null || imageUrl.isBlank()) {
                 return ResponseEntity.badRequest().body("imageUrl is required");
             }
@@ -95,8 +113,12 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+        try {
+            productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

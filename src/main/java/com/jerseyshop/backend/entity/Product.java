@@ -1,8 +1,11 @@
 package com.jerseyshop.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,7 +13,9 @@ import java.util.List;
 @Table(name = "products")
 @Data
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Product {
+public class Product implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,7 +34,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties({"products"})
+    @JsonIgnoreProperties({"products", "hibernateLazyInitializer", "handler"})
     private Category category;
 
     @Column(nullable = false)
@@ -41,14 +46,14 @@ public class Product {
     @Column(nullable = false)
     private String size;
 
-    @Column(nullable = true)
+    @Column(name = "image_url")
     private String imageUrl;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"order", "product"})
+    @JsonIgnore
     private List<OrderItem> orderItems;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"cart", "product"})
+    @JsonIgnore
     private List<CartItem> cartItems;
 }

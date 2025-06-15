@@ -8,6 +8,8 @@ import com.jerseyshop.backend.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +29,7 @@ public class ProductService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Cacheable(value = "products", key = "'all'")
     @Transactional
     public List<Product> getAllProducts() {
         List<Product> products = productRepository.findAll();
@@ -34,6 +37,7 @@ public class ProductService {
         return products;
     }
 
+    @Cacheable(value = "products", key = "#id")
     @Transactional
     public Optional<Product> getProductById(Long id) {
         Optional<Product> product = productRepository.findById(id);
@@ -41,6 +45,7 @@ public class ProductService {
         return product;
     }
 
+    @Cacheable(value = "products", key = "'category_' + #categoryId")
     @Transactional
     public List<Product> getProductsByCategory(Long categoryId) {
         List<Product> products = productRepository.findByCategoryId(categoryId);
@@ -48,23 +53,28 @@ public class ProductService {
         return products;
     }
 
+    @Cacheable(value = "products", key = "'team_' + #team")
     public List<Product> getProductsByTeam(String team) {
         return productRepository.findByTeam(team);
     }
 
+    @Cacheable(value = "products", key = "'color_' + #color")
     public List<Product> getProductsByColor(String color) {
         return productRepository.findByColor(color);
     }
 
+    @Cacheable(value = "products", key = "'size_' + #size")
     public List<Product> getProductsBySize(String size) {
         return productRepository.findBySize(size);
     }
 
+    @Cacheable(value = "products", key = "'search_' + #keyword")
     public List<Product> searchProducts(String keyword) {
         return productRepository.searchByKeyword(keyword);
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public Product createProduct(Product product, MultipartFile image) {
         validateProduct(product);
         Category category = categoryRepository.findById(product.getCategory().getId())
@@ -84,6 +94,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public Product updateProduct(Long id, Product productDetails, MultipartFile image) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found"));
@@ -115,6 +126,16 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", key = "#id")
+    public Product updateProductImage(Long id, String imageUrl) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        product.setImageUrl(imageUrl); // Fixed: Set the imageUrl
+        return productRepository.save(product);
+    }
+
+    @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new IllegalArgumentException("Product not found");
@@ -144,13 +165,5 @@ public class ProductService {
         if (product.getSize() == null || product.getSize().isBlank()) {
             throw new IllegalArgumentException("Size is required");
         }
-    }
-
-    @Transactional
-    public Product updateProductImage(Long id, String imageUrl) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
-        product.setImageUrl(imageUrl); // Adjust to setImageUrls if List<String>
-        return productRepository.save(product);
     }
 }
